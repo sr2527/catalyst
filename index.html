@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CATALYST</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0f0e17;
+      --surface:    #1a1828;
+      --card:       #231f38;
+      --card-hi:    #2d2847;
+      --border:     #332e50;
+      --accent:     #ff6b35;
+      --accent-dim: rgba(255,107,53,0.15);
+      --accent2:    #ffd166;
+      --accent2-dim:rgba(255,209,102,0.15);
+      --green:      #06d6a0;
+      --green-dim:  rgba(6,214,160,0.12);
+      --red:        #ef233c;
+      --red-dim:    rgba(239,35,60,0.12);
+      --blue:       #4cc9f0;
+      --blue-dim:   rgba(76,201,240,0.12);
+      --text:       #fffffe;
+      --text-2:     #a7a3c2;
+      --text-3:     #665f8a;
+      --r:          16px;
+      --rs:         10px;
+      --rl:         24px;
+      --shadow:     0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 0 0 80px;
+    }
+
+    /* ===== SHARED ===== */
+    .screen { padding: 24px 20px; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    .logo {
+      font-size: 13px; font-weight: 800; letter-spacing: 0.18em;
+      color: var(--accent); text-transform: uppercase; margin-bottom: 4px;
+    }
+    .headline { font-size: 26px; font-weight: 800; line-height: 1.2; }
+    .subline { font-size: 15px; color: var(--text-2); margin-top: 6px; line-height: 1.5; }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 18px; margin-bottom: 14px;
+    }
+    .card-title { font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
+
+    .btn {
+      display: block; width: 100%; padding: 16px 20px;
+      border: none; border-radius: var(--r); font-size: 16px; font-weight: 700;
+      cursor: pointer; text-align: center; transition: all 0.15s ease; line-height: 1;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-ghost {
+      background: transparent; color: var(--text-2);
+      border: 1px solid var(--border); font-size: 14px; padding: 12px 20px;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-green { background: var(--green); color: #0f0e17; }
+    .btn-sm {
+      display: inline-block; width: auto; padding: 10px 16px;
+      font-size: 14px; border-radius: var(--rs);
+    }
+
+    .tag {
+      display: inline-block; padding: 4px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+    }
+    .tag-dread { background: var(--red-dim); color: var(--red); }
+    .tag-low   { background: var(--blue-dim); color: var(--blue); }
+    .tag-high  { background: var(--accent-dim); color: var(--accent); }
+    .tag-done  { background: var(--green-dim); color: var(--green); }
+
+    /* ===== HEADER ===== */
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 20px 0;
+    }
+    .streak-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--accent2-dim); border: 1px solid rgba(255,209,102,0.2);
+      border-radius: 20px; padding: 6px 12px;
+      font-size: 13px; font-weight: 700; color: var(--accent2);
+    }
+
+    /* ===== HOME ===== */
+    .energy-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .energy-btn {
+      background: var(--card); border: 2px solid var(--border); border-radius: var(--r);
+      padding: 16px 8px; text-align: center; cursor: pointer; transition: all 0.15s ease;
+    }
+    .energy-btn:active { transform: scale(0.95); }
+    .energy-btn .emoji { font-size: 28px; display: block; margin-bottom: 6px; }
+    .energy-btn .label { font-size: 12px; font-weight: 700; color: var(--text-2); }
+    .energy-btn.selected, .energy-btn:hover { border-color: var(--accent); }
+
+    /* ===== DUMP ===== */
+    .dump-area {
+      width: 100%; min-height: 160px; padding: 16px;
+      background: var(--surface); border: 2px solid var(--border); border-radius: var(--r);
+      color: var(--text); font-size: 16px; resize: none; font-family: inherit;
+      line-height: 1.6; outline: none; transition: border-color 0.2s;
+    }
+    .dump-area:focus { border-color: var(--accent); }
+    .dump-area::placeholder { color: var(--text-3); }
+
+    .voice-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px; background: var(--card);
+      border: 2px solid var(--border); border-radius: var(--r);
+      color: var(--text-2); font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s ease; margin-bottom: 12px;
+    }
+    .voice-btn.listening {
+      border-color: var(--red); color: var(--red);
+      background: var(--red-dim); animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+    /* ===== BESTIE ===== */
+    .bestie-bubble {
+      background: var(--card-hi); border: 1px solid var(--border);
+      border-radius: var(--r); border-top-left-radius: 4px;
+      padding: 14px 16px; margin-bottom: 16px;
+      font-size: 15px; line-height: 1.5; color: var(--text);
+      position: relative;
+    }
+    .bestie-bubble::before {
+      content: '⚡'; position: absolute; top: -10px; left: 14px;
+      background: var(--card-hi); padding: 0 4px; font-size: 14px;
+    }
+    .bestie-name { font-size: 11px; font-weight: 700; color: var(--accent);
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+
+    /* ===== TASK LIST ===== */
+    .task-item {
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: var(--r); padding: 16px; margin-bottom: 10px;
+      cursor: pointer; transition: all 0.15s ease;
+    }
+    .task-item:hover, .task-item:active { border-color: var(--accent); transform: translateY(-1px); }
+    .task-item .pinch-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .task-item .raw-title { font-size: 13px; color: var(--text-3); }
+    .task-item .tags { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .task-item.done { opacity: 0.45; cursor: default; }
+    .task-item.done:hover { transform: none; border-color: var(--border); }
+
+    /* ===== FOCUS ===== */
+    .focus-screen {
+      min-height: 100vh; padding: 20px;
+      display: flex; flex-direction: column;
+    }
+    .focus-task { font-size: 22px; font-weight: 800; line-height: 1.3; margin-bottom: 8px; }
+    .focus-raw { font-size: 14px; color: var(--text-3); margin-bottom: 24px; }
+
+    .timer-display {
+      font-size: 52px; font-weight: 900; letter-spacing: -2px;
+      color: var(--accent); text-align: center; margin: 8px 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .timer-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 20px; text-align: center; margin-bottom: 14px;
+    }
+    .timer-label { font-size: 11px; color: var(--text-3); font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+
+    .ramp-step {
+      background: var(--accent-dim); border: 1.5px solid var(--accent);
+      border-radius: var(--r); padding: 16px; margin-bottom: 12px;
+      font-size: 15px; font-weight: 600;
+    }
+    .ramp-label { font-size: 11px; color: var(--accent);
+      font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+
+    .phone-btn {
+      background: var(--red-dim); border: 1.5px solid var(--red);
+      border-radius: var(--rs); padding: 12px 16px;
+      color: var(--red); font-size: 14px; font-weight: 600;
+      cursor: pointer; text-align: center; margin-bottom: 10px;
+      transition: all 0.15s ease;
+    }
+    .phone-btn:active { transform: scale(0.97); }
+
+    /* ===== FOCUS BESTIE (corner) ===== */
+    .bestie-corner {
+      position: fixed; bottom: 90px; right: 20px;
+      z-index: 100;
+    }
+    .bestie-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--accent); display: flex; align-items: center;
+      justify-content: center; font-size: 22px; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(255,107,53,0.4);
+      border: 2px solid rgba(255,107,53,0.4);
+      transition: transform 0.15s ease;
+    }
+    .bestie-avatar:active { transform: scale(0.92); }
+    .bestie-popup {
+      position: absolute; bottom: 58px; right: 0;
+      width: 240px; background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 14px; display: none;
+      box-shadow: var(--shadow); animation: popIn 0.2s ease;
+    }
+    .bestie-popup.visible { display: block; }
+    @keyframes popIn { from { opacity:0; transform:scale(0.9) translateY(8px); } to { opacity:1; transform:none; } }
+    .bestie-popup-text { font-size: 14px; line-height: 1.5; margin-bottom: 10px; }
+    .bestie-popup-actions { display: flex; gap: 8px; }
+    .bestie-popup-btn {
+      flex: 1; padding: 8px; border-radius: var(--rs);
+      font-size: 12px; font-weight: 700; cursor: pointer; text-align: center;
+      background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent);
+      transition: all 0.15s ease;
+    }
+
+    /* ===== SPIRAL OVERLAY ===== */
+    #spiral-fab {
+      position: fixed; bottom: 24px; right: 20px; z-index: 200;
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--surface); border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; cursor: pointer; box-shadow: var(--shadow);
+      transition: all 0.15s ease;
+    }
+    #spiral-fab:active { transform: scale(0.9); }
+
+    .spiral-overlay {
+      position: fixed; inset: 0; background: rgba(15,14,23,0.95);
+      z-index: 300; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px 24px; animation: fadeIn 0.2s ease;
+    }
+    .spiral-overlay .headline { text-align: center; margin-bottom: 8px; }
+    .spiral-overlay .subline { text-align: center; margin-bottom: 32px; }
+
+    .grounding-step {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 20px; text-align: center;
+      margin-bottom: 16px; width: 100%; max-width: 360px;
+    }
+    .grounding-num { font-size: 48px; font-weight: 900; color: var(--accent2); margin-bottom: 8px; }
+    .grounding-text { font-size: 16px; color: var(--text-2); }
+
+    /* ===== CLOSING ===== */
+    .win-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px; background: var(--green-dim);
+      border: 1px solid rgba(6,214,160,0.2); border-radius: var(--rs);
+      margin-bottom: 10px;
+    }
+    .win-item .check { font-size: 18px; flex-shrink: 0; }
+    .win-item .text { font-size: 15px; line-height: 1.4; }
+
+    .rollover-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px; background: var(--card);
+      border: 1px solid var(--border); border-radius: var(--rs); margin-bottom: 10px;
+    }
+    .rollover-item .badge { font-size: 11px; font-weight: 700; color: var(--accent2);
+      background: var(--accent2-dim); padding: 3px 8px; border-radius: 20px;
+      white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+    .rollover-item .text { font-size: 14px; color: var(--text-2); line-height: 1.4; }
+
+    /* ===== LOADING ===== */
+    .loading {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 48px 24px; gap: 16px;
+    }
+    .spinner {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 3px solid var(--border); border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 15px; color: var(--text-2); text-align: center; }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-bar-wrap {
+      background: var(--surface); border-radius: 20px;
+      height: 8px; overflow: hidden; margin-bottom: 16px;
+    }
+    .progress-bar-fill {
+      height: 100%; border-radius: 20px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 0.6s ease;
+    }
+
+    /* ===== CHECKIN ===== */
+    .energy-option {
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: var(--r); padding: 18px 16px;
+      cursor: pointer; margin-bottom: 10px; transition: all 0.15s ease;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .energy-option:active { transform: scale(0.98); }
+    .energy-option.selected { border-color: var(--accent); background: var(--accent-dim); }
+    .energy-option .eo-icon { font-size: 28px; flex-shrink: 0; }
+    .energy-option .eo-label { font-size: 16px; font-weight: 700; }
+    .energy-option .eo-sub { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+
+    /* ===== MISC ===== */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+    .text-center { text-align: center; }
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .gap-10 { display: flex; flex-direction: column; gap: 10px; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<div id="spiral-fab" onclick="openSpiral()" title="I'm spiraling">🌀</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const AI_URL   = 'https://lalo-ai.srahman2794.workers.dev';
+const AI_MODEL = 'anthropic/claude-3-haiku';
+
+const ROLLOVER_BADGES = [
+  'Round 2 👊', 'Revenge Match ⚔️', 'Unfinished Business 🔥',
+  'The Sequel 🎬', 'Try Again 🔄', 'Still Standing 💪', 'Boss Fight Rematch 🕹️'
+];
+
+const PINCH_FALLBACKS = [
+  t => `⚡ SPEEDRUN: ${t}`,
+  t => `🎯 Mission: ${t}`,
+  t => `🔥 Boss Fight: ${t}`,
+  t => `🏁 Race Mode: ${t}`,
+  t => `💣 Defuse it: ${t}`,
+];
+
+const CHECKIN_MESSAGES = {
+  low:  "ok low battery mode activated. we're doing easy stuff today and calling it a win.",
+  mid:  "60% is actually enough to do something real. let's pick one good thing.",
+  high: "oh we're GOING today. let's aim at the hard stuff while it lasts.",
+};
+
+const SEASONS = [
+  { name: 'Fire Season', emoji: '🔥', accent: '#ff6b35' },
+  { name: 'Flow Season', emoji: '🌊', accent: '#4cc9f0' },
+  { name: 'Bloom Season', emoji: '🌿', accent: '#06d6a0' },
+  { name: 'Spark Season', emoji: '⚡', accent: '#ffd166' },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let S = {
+  screen: 'home',
+  tasks: [],
+  currentTask: null,
+  energy: null,
+  timerInterval: null,
+  timerSeconds: 0,
+  timerRunning: false,
+  rampStep: -1,      // -1 = not started, 0/1/2 = steps
+  rampSteps: [],
+  bestieMsg: '',
+  bestieFocusMsg: '',
+  bestiePopupVisible: false,
+  isListening: false,
+  transcript: '',
+  showSpiral: false,
+  spiralStep: 0,
+  inactivityTimer: null,
+  lastInteraction: Date.now(),
+  loading: false,
+  loadingText: '',
+};
+
+// ============================================================
+// PERSISTENCE
+// ============================================================
+function loadStored() {
+  return {
+    tasks:   JSON.parse(localStorage.getItem('ign_tasks')   || '[]'),
+    streak:  JSON.parse(localStorage.getItem('ign_streak')  || '{"count":0,"lastDate":null,"skipTokens":1}'),
+    history: JSON.parse(localStorage.getItem('ign_history') || '[]'),
+    season:  parseInt(localStorage.getItem('ign_season')    || '0'),
+  };
+}
+
+function save(key, val) {
+  localStorage.setItem('ign_' + key, JSON.stringify(val));
+}
+
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function updateStreak() {
+  const d = loadStored();
+  const streak = d.streak;
+  const today = todayStr();
+  if (streak.lastDate === today) return streak;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  if (streak.lastDate === yesterday) {
+    streak.count += 1;
+  } else if (streak.lastDate !== today) {
+    // missed — check if we have skip tokens or just showed up
+    streak.count = 1; // restart but frame as comeback
+  }
+  streak.lastDate = today;
+  // earn a skip token weekly (every 7 days)
+  if (streak.count % 7 === 0) streak.skipTokens = (streak.skipTokens || 0) + 1;
+  save('streak', streak);
+  return streak;
+}
+
+// ============================================================
+// AI
+// ============================================================
+async function callAI(system, user) {
+  const res = await fetch(AI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: AI_MODEL,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user',   content: user   },
+      ],
+      max_tokens: 600,
+    }),
+  });
+  if (!res.ok) throw new Error('AI unavailable');
+  const data = await res.json();
+  return data.choices[0].message.content.trim();
+}
+
+async function extractTasksFromDump(dump) {
+  const system = `You are CATALYST's AI. The user has ADHD and just brain-dumped everything on their mind.
+Your job:
+1. Extract every task or to-do from their dump (ignore pure venting).
+2. Rate each task's dread level (0-10) based on emotional language.
+3. Rate energy needed: "low" (emails, admin, quick replies), "mid" (research, reading), "high" (grant writing, complex writing, hard thinking).
+4. Write ONE bestie_line: casual, warm, slightly roast-y, 1 sentence acknowledging what they dumped. Like a chaotic ADHD best friend.
+
+Return ONLY valid JSON, no markdown:
+{"tasks":[{"text":"task description","dread":5,"energy":"mid"}],"bestie_line":"your one line here"}`;
+  const raw = await callAI(system, dump);
+  try {
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    return JSON.parse(cleaned);
+  } catch {
+    return { tasks: [{ text: dump, dread: 3, energy: 'mid' }], bestie_line: "ok i caught all that, let's sort it." };
+  }
+}
+
+async function pinchReframe(taskText, energy) {
+  const system = `You are CATALYST's bestie — chaotic ADHD best friend with playful roast energy.
+Reframe this task using PINCH (Playful, Interesting, Novelty, Competition, or Hurry).
+Return ONLY the reframed task title — 6-10 words max, punchy, fun, urgent, or gamified.
+Make it feel like a mission, game, race, or challenge. NOT a normal task description.
+Examples: "Boss Fight: The Grant Proposal 🔥", "Inbox Speedrun — beat the clock ⚡", "Cold Case: Literature Review 🕵️"`;
+  try {
+    return await callAI(system, `Task: "${taskText}" | Energy needed: ${energy}`);
+  } catch {
+    const i = Math.floor(Math.random() * PINCH_FALLBACKS.length);
+    return PINCH_FALLBACKS[i](taskText);
+  }
+}
+
+async function getActivationRamp(taskText) {
+  const system = `You are CATALYST's bestie. Generate exactly 3 micro-steps to start this task.
+Each step must be stupidly small — something completable in under 30 seconds.
+Step 1: just open / find / locate something. Step 2: just read / look at the first piece. Step 3: do the smallest possible first action.
+Return ONLY valid JSON, no markdown: {"steps":["step 1","step 2","step 3"]}`;
+  try {
+    const raw = await callAI(system, `Task: "${taskText}"`);
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    return parsed.steps;
+  } catch {
+    return [
+      `Just open whatever you need for: ${taskText}`,
+      'Just read or look at the very first thing',
+      'Do one tiny action — one line, one click, one word',
+    ];
+  }
+}
+
+async function getBestieCheckin(context) {
+  const system = `You are CATALYST's bestie — a chaotic ADHD best friend with playful roast energy.
+The user is in focus mode and you're checking in. Ask "need anything from me?" energy — NOT accusatory.
+Keep it to 1-2 sentences. Be warm, maybe slightly funny, never shame-y.
+Context about what they're working on is provided.`;
+  try {
+    return await callAI(system, context);
+  } catch {
+    const opts = [
+      "hey still alive over there? need anything from me? 👀",
+      "just popping in — you good? need a hand with anything?",
+      "checking in ⚡ how's it going, be honest",
+    ];
+    return opts[Math.floor(Math.random() * opts.length)];
+  }
+}
+
+// ============================================================
+// RENDER ENGINE
+// ============================================================
+function render(html) {
+  document.getElementById('app').innerHTML = html;
+}
+
+function topBar() {
+  const d = loadStored();
+  const streak = d.streak;
+  const count = streak.count || 0;
+  const tokens = streak.skipTokens || 0;
+  return `<div class="top-bar">
+    <div class="logo">CATALYST ⚡</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      ${tokens > 0 ? `<div class="streak-pill" title="${tokens} skip token(s)">🛡️ ${tokens}</div>` : ''}
+      <div class="streak-pill">🔥 ${count}</div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// SCREEN: HOME
+// ============================================================
+function renderHome() {
+  S.screen = 'home';
+  stopTimer();
+  const d = loadStored();
+  const hasTasks = d.tasks.filter(t => t.status !== 'done').length > 0;
+  const comeback = d.streak.count === 0 && d.streak.lastDate && d.streak.lastDate !== todayStr();
+
+  render(`
+    ${topBar()}
+    <div class="screen">
+      ${comeback ? `<div class="bestie-bubble" style="margin-bottom:20px;">
+        <div class="bestie-name">The Bestie</div>
+        welcome back. no questions asked. let's just do one thing. 🤝
+      </div>` : ''}
+
+      <div class="headline">${greeting()}</div>
+      <div class="subline">How's the brain today?</div>
+
+      <div style="margin-top:24px;">
+        <div class="energy-option" onclick="selectEnergyHome('low')">
+          <div class="eo-icon">🪫</div>
+          <div><div class="eo-label">Running on fumes</div><div class="eo-sub">20% — easy stuff only</div></div>
+        </div>
+        <div class="energy-option" onclick="selectEnergyHome('mid')">
+          <div class="eo-icon">⚡</div>
+          <div><div class="eo-label">Decent engine</div><div class="eo-sub">60% — let's do something real</div></div>
+        </div>
+        <div class="energy-option" onclick="selectEnergyHome('high')">
+          <div class="eo-icon">🔥</div>
+          <div><div class="eo-label">Actually firing</div><div class="eo-sub">100% — hit the hard stuff</div></div>
+        </div>
+      </div>
+
+      ${hasTasks ? `
+        <div class="divider"></div>
+        <button class="btn btn-ghost" onclick="renderTaskList()">⚡ Pick up where I left off</button>
+      ` : ''}
+
+      <div class="mt-16">
+        <button class="btn btn-ghost" onclick="renderClosing()" style="margin-top:10px;">🌙 End of day wrap-up</button>
+      </div>
+    </div>
+  `);
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning 🌅";
+  if (h < 17) return "Hey 👋";
+  return "Evening mode 🌙";
+}
+
+function selectEnergyHome(level) {
+  S.energy = level;
+  const d = loadStored();
+  if (d.tasks.filter(t => t.status !== 'done').length > 0) {
+    renderCheckinResponse();
+  } else {
+    renderDump();
+  }
+}
+
+// ============================================================
+// SCREEN: BRAIN DUMP
+// ============================================================
+function renderDump() {
+  S.screen = 'dump';
+  render(`
+    ${topBar()}
+    <div class="screen">
+      <div class="logo">brain dump</div>
+      <div class="headline">Get it all out 🧠</div>
+      <div class="subline">Everything in your head — tasks, worries, random stuff. Don't organize, just dump.</div>
+
+      <div style="margin-top:24px;">
+        <button class="voice-btn" id="voice-btn" onclick="toggleVoice()">
+          <span>🎙️</span> <span id="voice-label">Tap to speak</span>
+        </button>
+
+        <textarea
+          class="dump-area"
+          id="dump-input"
+          placeholder="or just type... what's swirling around in there?"
+          oninput="S.transcript = this.value"
+          rows="6"
+        >${S.transcript}</textarea>
+
+        <button class="btn btn-primary mt-16" onclick="submitDump()">
+          Process it ⚡
+        </button>
+        <button class="btn btn-ghost mt-8" onclick="renderHome()">← Back</button>
+      </div>
+    </div>
+  `);
+  // restore typed text
+  const el = document.getElementById('dump-input');
+  if (el) el.value = S.transcript;
+}
+
+function toggleVoice() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Voice not supported in this browser. Just type instead!');
+    return;
+  }
+  if (S.isListening) {
+    S.recognition && S.recognition.stop();
+    S.isListening = false;
+    updateVoiceBtn();
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  S.recognition = new SR();
+  S.recognition.continuous = true;
+  S.recognition.interimResults = true;
+  S.recognition.onresult = e => {
+    let final = '';
+    for (let i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
+    }
+    if (final) {
+      S.transcript = (S.transcript + ' ' + final).trim();
+      const el = document.getElementById('dump-input');
+      if (el) el.value = S.transcript;
+    }
+  };
+  S.recognition.onend = () => {
+    S.isListening = false;
+    updateVoiceBtn();
+  };
+  S.recognition.start();
+  S.isListening = true;
+  updateVoiceBtn();
+}
+
+function updateVoiceBtn() {
+  const btn = document.getElementById('voice-btn');
+  const lbl = document.getElementById('voice-label');
+  if (!btn) return;
+  if (S.isListening) {
+    btn.classList.add('listening');
+    lbl.textContent = 'Listening... tap to stop';
+  } else {
+    btn.classList.remove('listening');
+    lbl.textContent = 'Tap to speak';
+  }
+}
+
+async function submitDump() {
+  const el = document.getElementById('dump-input');
+  const text = (el ? el.value : S.transcript).trim();
+  if (!text) { alert('Add something first!'); return; }
+  S.transcript = text;
+  if (S.recognition) S.recognition.stop();
+
+  setLoading('Reading your brain dump...');
+
+  try {
+    const result = await extractTasksFromDump(text);
+    S.bestieMsg = result.bestie_line;
+
+    // PINCH reframe all tasks
+    setLoading('Reframing tasks (making them less horrible)...');
+    const tasks = result.tasks;
+    for (let t of tasks) {
+      t.id = Date.now() + Math.random();
+      t.pinch = await pinchReframe(t.text, t.energy);
+      t.status = 'pending';
+      t.rolls = 0;
+    }
+
+    // Filter by energy level
+    const d = loadStored();
+    const all = [...d.tasks.filter(t => t.status !== 'done'), ...tasks];
+    save('tasks', all);
+    S.tasks = filterByEnergy(all, S.energy);
+
+    updateStreak();
+    renderCheckinResponse();
+  } catch(err) {
+    // fallback — parse manually
+    const tasks = text.split('\n').filter(l => l.trim()).map(l => ({
+      id: Date.now() + Math.random(),
+      text: l.trim(),
+      pinch: PINCH_FALLBACKS[0](l.trim()),
+      dread: 3, energy: 'mid', status: 'pending', rolls: 0
+    }));
+    S.tasks = tasks;
+    S.bestieMsg = "ok i couldn't phone home but i got your tasks. let's go.";
+    save('tasks', tasks);
+    updateStreak();
+    renderCheckinResponse();
+  }
+}
+
+function filterByEnergy(tasks, energy) {
+  if (energy === 'low')  return tasks.filter(t => t.energy === 'low' || t.dread < 4);
+  if (energy === 'high') return tasks.sort((a,b) => b.dread - a.dread);
+  return tasks; // mid = all
+}
+
+// ============================================================
+// SCREEN: CHECKIN RESPONSE (after energy pick)
+// ============================================================
+function renderCheckinResponse() {
+  S.screen = 'checkin';
+  const msg = CHECKIN_MESSAGES[S.energy] || CHECKIN_MESSAGES.mid;
+  const d = loadStored();
+  S.tasks = filterByEnergy(d.tasks.filter(t => t.status !== 'done'), S.energy);
+
+  render(`
+    ${topBar()}
+    <div class="screen">
+      <div class="logo">check-in</div>
+      <div class="headline">
+        ${S.energy === 'low' ? '🪫 Low battery day' : S.energy === 'high' ? '🔥 High voltage' : '⚡ Mid-power mode'}
+      </div>
+
+      <div class="bestie-bubble" style="margin-top:20px;">
+        <div class="bestie-name">The Bestie</div>
+        ${S.bestieMsg || msg}
+      </div>
+
+      ${S.tasks.length === 0 ? `
+        <div class="card text-center">
+          <div style="font-size:32px;margin-bottom:8px;">🎉</div>
+          <div style="font-weight:700;">No tasks yet!</div>
+          <div class="subline" style="margin-top:4px;">Add some stuff first.</div>
+        </div>
+        <button class="btn btn-primary" onclick="renderDump()">Do a brain dump ⚡</button>
+      ` : `
+        <button class="btn btn-primary mt-16" onclick="renderTaskList()">See my tasks →</button>
+        <button class="btn btn-ghost mt-8" onclick="renderDump()">Add more tasks</button>
+      `}
+    </div>
+  `);
+}
+
+// ============================================================
+// SCREEN: TASK LIST
+// ============================================================
+function renderTaskList() {
+  S.screen = 'tasks';
+  const d = loadStored();
+  const pending = d.tasks.filter(t => t.status !== 'done');
+  const done = d.tasks.filter(t => t.status === 'done');
+  const total = d.tasks.length;
+  const doneCount = done.length;
+  const pct = total > 0 ? Math.max(20, Math.round((doneCount / total) * 100)) : 20;
+
+  render(`
+    ${topBar()}
+    <div class="screen">
+      <div class="logo">your lineup</div>
+      <div class="headline">Pick one. Just one. 🎯</div>
+
+      <div style="margin-top:16px;">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" style="width:${pct}%"></div>
+        </div>
+        <div style="font-size:13px;color:var(--text-3);margin-bottom:16px;">${doneCount} done · ${pending.length} left</div>
+      </div>
+
+      ${pending.length === 0 ? `
+        <div class="card text-center">
+          <div style="font-size:40px;margin-bottom:8px;">🎊</div>
+          <div style="font-weight:700;font-size:18px;">You cleared everything!</div>
+          <div class="subline" style="margin-top:6px;">That's a real win.</div>
+        </div>
+        <button class="btn btn-primary mt-16" onclick="renderClosing()">Wrap up the day 🌙</button>
+      ` : pending.map(task => taskCard(task)).join('')}
+
+      ${done.length > 0 ? `
+        <div class="divider"></div>
+        <div class="card-title">Done ✓</div>
+        ${done.map(t => `<div class="task-item done">
+          <div class="pinch-title" style="text-decoration:line-through;opacity:0.6;">${t.text}</div>
+        </div>`).join('')}
+      ` : ''}
+
+      <button class="btn btn-ghost mt-16" onclick="renderHome()">← Home</button>
+    </div>
+  `);
+}
+
+function taskCard(task) {
+  const rollBadge = task.rolls > 0
+    ? `<span class="tag" style="background:var(--accent2-dim);color:var(--accent2);">${ROLLOVER_BADGES[Math.min(task.rolls-1, ROLLOVER_BADGES.length-1)]}</span>`
+    : '';
+  const dreadBadge = task.dread >= 7
+    ? `<span class="tag tag-dread">😬 dread x${task.dread}</span>`
+    : '';
+  const energyBadge = `<span class="tag tag-${task.energy}">${task.energy === 'low' ? '🔋 easy' : task.energy === 'high' ? '🔥 hard' : '⚡ mid'}</span>`;
+
+  return `<div class="task-item" onclick="startFocus('${escId(task.id)}')">
+    <div class="pinch-title">${task.pinch || task.text}</div>
+    <div class="raw-title">${task.text}</div>
+    <div class="tags">${energyBadge}${dreadBadge}${rollBadge}</div>
+  </div>`;
+}
+
+function escId(id) { return String(id).replace(/[^a-zA-Z0-9._-]/g, '_'); }
+
+// ============================================================
+// SCREEN: FOCUS
+// ============================================================
+async function startFocus(taskId) {
+  const d = loadStored();
+  const task = d.tasks.find(t => escId(t.id) === taskId || String(t.id) === String(taskId));
+  if (!task) { renderTaskList(); return; }
+  S.currentTask = task;
+  S.rampStep = -1;
+  S.rampSteps = [];
+  S.timerSeconds = 0;
+  S.bestiePopupVisible = false;
+
+  renderFocusLoading();
+
+  try {
+    S.rampSteps = await getActivationRamp(task.text);
+  } catch {
+    S.rampSteps = [
+      'Just open whatever you need',
+      'Read the first thing',
+      'Do one tiny action',
+    ];
+  }
+
+  renderFocusScreen();
+  startTimer();
+  resetInactivityTimer();
+}
+
+function renderFocusLoading() {
+  render(`
+    ${topBar()}
+    <div class="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Building your activation ramp...<br><span style="font-size:13px;color:var(--text-3);">making this task less scary</span></div>
+    </div>
+  `);
+}
+
+function renderFocusScreen() {
+  const task = S.currentTask;
+  if (!task) return;
+  const step = S.rampStep;
+  const stepContent = step >= 0 && step <= 2 ? `
+    <div class="ramp-step">
+      <div class="ramp-label">Step ${step + 1} of 3 — just this:</div>
+      ${S.rampSteps[step]}
+    </div>
+    <button class="btn btn-green mt-8" onclick="nextRampStep()" style="margin-bottom:12px;">
+      ✓ Done, next step
+    </button>
+  ` : step === -1 ? `
+    <div class="ramp-step" style="text-align:center;">
+      <div class="ramp-label">activation ramp</div>
+      <div style="margin-bottom:12px;">Start small. One step at a time.</div>
+      <button class="btn btn-primary btn-sm" onclick="nextRampStep()">Begin → just step 1</button>
+    </div>
+  ` : `
+    <div class="card" style="background:var(--green-dim);border-color:rgba(6,214,160,0.2);">
+      <div style="font-size:13px;font-weight:700;color:var(--green);">🟢 YOU'RE IN IT — keep going</div>
+    </div>
+  `;
+
+  const html = `
+    ${topBar()}
+    <div class="screen focus-screen">
+      <div>
+        <div class="logo">focus mode 🎯</div>
+        <div class="focus-task">${task.pinch || task.text}</div>
+        <div class="focus-raw">${task.text}</div>
+      </div>
+
+      <div class="timer-card">
+        <div class="timer-label">time on task</div>
+        <div class="timer-display" id="timer-display">${formatTime(S.timerSeconds)}</div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="toggleTimer()">
+            ${S.timerRunning ? '⏸ Pause' : '▶ Resume'}
+          </button>
+        </div>
+      </div>
+
+      ${stepContent}
+
+      <div class="phone-btn" onclick="phoneBtnHit()">
+        📱 I just picked up my phone
+      </div>
+
+      <button class="btn btn-green" onclick="completeTask()">✓ Done — mark complete</button>
+      <button class="btn btn-ghost mt-8" onclick="renderTaskList()">← Back to tasks</button>
+    </div>
+
+    <!-- Bestie corner -->
+    <div class="bestie-corner">
+      <div class="bestie-avatar" onclick="toggleBestiePopup()">⚡</div>
+      <div class="bestie-popup ${S.bestiePopupVisible ? 'visible' : ''}" id="bestie-popup">
+        <div class="bestie-name">The Bestie</div>
+        <div class="bestie-popup-text" id="bestie-popup-text">${S.bestieFocusMsg || 'need anything from me?'}</div>
+        <div class="bestie-popup-actions">
+          <div class="bestie-popup-btn" onclick="requestHelp()">help me</div>
+          <div class="bestie-popup-btn" onclick="closeBestiePopup()">i'm good</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  render(html);
+}
+
+function nextRampStep() {
+  S.rampStep++;
+  renderFocusScreen();
+  if (S.timerRunning === false) startTimer();
+  resetInactivityTimer();
+}
+
+function toggleTimer() {
+  if (S.timerRunning) {
+    clearInterval(S.timerInterval);
+    S.timerRunning = false;
+  } else {
+    startTimer();
+  }
+  renderFocusScreen();
+}
+
+function startTimer() {
+  clearInterval(S.timerInterval);
+  S.timerRunning = true;
+  S.timerInterval = setInterval(() => {
+    S.timerSeconds++;
+    const el = document.getElementById('timer-display');
+    if (el) el.textContent = formatTime(S.timerSeconds);
+    // Check inactivity every minute
+    if (S.timerSeconds % 60 === 0) checkInactivity();
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(S.timerInterval);
+  S.timerInterval = null;
+  S.timerRunning = false;
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60).toString().padStart(2,'0');
+  const ss = (s % 60).toString().padStart(2,'0');
+  return `${m}:${ss}`;
+}
+
+function resetInactivityTimer() {
+  S.lastInteraction = Date.now();
+}
+
+function checkInactivity() {
+  const elapsed = Date.now() - S.lastInteraction;
+  // After 15 min of no interaction during focus, pop bestie
+  if (elapsed > 15 * 60 * 1000 && S.screen === 'focus' && !S.bestiePopupVisible) {
+    triggerBestieCheckin();
+  }
+}
+
+async function triggerBestieCheckin() {
+  const task = S.currentTask;
+  const ctx = `User is working on: "${task ? task.text : 'something'}". Timer: ${formatTime(S.timerSeconds)}. They've been quiet.`;
+  const msg = await getBestieCheckin(ctx);
+  S.bestieFocusMsg = msg;
+  S.bestiePopupVisible = true;
+  const popup = document.getElementById('bestie-popup');
+  const txt = document.getElementById('bestie-popup-text');
+  if (popup) { popup.classList.add('visible'); }
+  if (txt) txt.textContent = msg;
+  resetInactivityTimer();
+}
+
+function toggleBestiePopup() {
+  S.bestiePopupVisible = !S.bestiePopupVisible;
+  if (S.bestiePopupVisible && !S.bestieFocusMsg) {
+    S.bestieFocusMsg = 'need anything from me?';
+    triggerBestieCheckin();
+  } else {
+    const popup = document.getElementById('bestie-popup');
+    if (popup) popup.classList.toggle('visible', S.bestiePopupVisible);
+  }
+  resetInactivityTimer();
+}
+
+function closeBestiePopup() {
+  S.bestiePopupVisible = false;
+  const popup = document.getElementById('bestie-popup');
+  if (popup) popup.classList.remove('visible');
+  resetInactivityTimer();
+}
+
+async function requestHelp() {
+  const task = S.currentTask;
+  const system = `You are CATALYST's bestie. User asked for help starting or getting through a task.
+Give them ONE specific micro-action they can do RIGHT NOW. Keep it to 1-2 sentences max.
+Warm, slightly roast-y, ADHD-friendly. Not a lecture.`;
+  closeBestiePopup();
+  const msg = await getBestieCheckin(`They need help with: "${task ? task.text : 'their task'}"`);
+  S.bestieFocusMsg = msg;
+  S.bestiePopupVisible = true;
+  const popup = document.getElementById('bestie-popup');
+  const txt = document.getElementById('bestie-popup-text');
+  if (popup) popup.classList.add('visible');
+  if (txt) txt.textContent = msg;
+}
+
+function phoneBtnHit() {
+  S.bestiePopupVisible = true;
+  const redirects = [
+    "ok ok, phone down, back to the thing. just re-read the last sentence you wrote. go.",
+    "caught you 😂 no judgment. just put it face down and do literally one thing.",
+    "lol same honestly. ok: screen down, one breath, and pick back up where you left off.",
+    "the phone will be there after. just finish the NEXT step first. you've got this.",
+  ];
+  S.bestieFocusMsg = redirects[Math.floor(Math.random() * redirects.length)];
+  const popup = document.getElementById('bestie-popup');
+  const txt = document.getElementById('bestie-popup-text');
+  if (popup) popup.classList.add('visible');
+  if (txt) txt.textContent = S.bestieFocusMsg;
+  resetInactivityTimer();
+}
+
+function completeTask() {
+  const d = loadStored();
+  const tasks = d.tasks.map(t => {
+    if (String(t.id) === String(S.currentTask?.id)) return { ...t, status: 'done' };
+    return t;
+  });
+  save('tasks', tasks);
+  save('history', [...d.history, { ...S.currentTask, completedAt: new Date().toISOString(), seconds: S.timerSeconds }]);
+  stopTimer();
+
+  // Variable reward
+  const rewards = [
+    { emoji: '⚡', text: 'TASK DESTROYED', xp: Math.floor(Math.random() * 50) + 10 },
+    { emoji: '🎯', text: 'DIRECT HIT', xp: Math.floor(Math.random() * 100) + 50 },
+    { emoji: '🔥', text: 'ON FIRE', xp: Math.floor(Math.random() * 30) + 5 },
+    { emoji: '💎', text: 'JACKPOT — DOUBLE XP', xp: Math.floor(Math.random() * 200) + 100 },
+  ];
+  const reward = rewards[Math.floor(Math.random() * rewards.length)];
+
+  render(`
+    ${topBar()}
+    <div class="screen text-center">
+      <div style="font-size:72px;margin-bottom:16px;">${reward.emoji}</div>
+      <div class="headline">${reward.text}</div>
+      <div style="font-size:40px;font-weight:900;color:var(--accent2);margin:12px 0;">+${reward.xp} XP</div>
+      <div class="subline">${formatTime(S.timerSeconds)} on task</div>
+
+      <div class="bestie-bubble" style="margin-top:24px;text-align:left;">
+        <div class="bestie-name">The Bestie</div>
+        ${getCompletionLine()}
+      </div>
+
+      <button class="btn btn-primary mt-24" onclick="renderTaskList()">Next task →</button>
+      <button class="btn btn-ghost mt-8" onclick="renderClosing()">Wrap up for today 🌙</button>
+    </div>
+  `);
+}
+
+function getCompletionLine() {
+  const lines = [
+    "YESSS okay you actually did it. I knew you could.",
+    "that just happened!! look at you go 🎉",
+    "alright i see you. that one wasn't easy and you did it anyway.",
+    "okay now THAT'S how you do it. keep the momentum.",
+    "we love to see it. you literally just did the thing 🔥",
+  ];
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+
+// ============================================================
+// SCREEN: CLOSING RITUAL
+// ============================================================
+function renderClosing() {
+  S.screen = 'closing';
+  stopTimer();
+  const d = loadStored();
+  const done = d.history.filter(t => t.completedAt?.startsWith(todayStr()));
+  const pending = d.tasks.filter(t => t.status !== 'done');
+
+  // Roll over pending tasks
+  const rolled = pending.map(t => ({ ...t, rolls: (t.rolls || 0) + 1, status: 'pending' }));
+  save('tasks', rolled);
+
+  render(`
+    ${topBar()}
+    <div class="screen">
+      <div class="logo">closing ritual 🌙</div>
+      <div class="headline">You showed up today.</div>
+      <div class="subline">That's the whole game.</div>
+
+      ${done.length > 0 ? `
+        <div style="margin-top:24px;">
+          <div class="card-title">What you actually did ✓</div>
+          ${done.slice(-5).map(t => `
+            <div class="win-item">
+              <div class="check">✅</div>
+              <div class="text">${t.text}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : `
+        <div class="bestie-bubble" style="margin-top:20px;">
+          <div class="bestie-name">The Bestie</div>
+          you opened this app. that counts. for real.
+        </div>
+      `}
+
+      ${rolled.length > 0 ? `
+        <div style="margin-top:24px;">
+          <div class="card-title">Tomorrow's opening lineup</div>
+          ${rolled.slice(0,4).map(t => `
+            <div class="rollover-item">
+              <div class="badge">${ROLLOVER_BADGES[Math.min((t.rolls||1)-1, ROLLOVER_BADGES.length-1)]}</div>
+              <div class="text">${t.text}</div>
+            </div>
+          `).join('')}
+          ${rolled.length > 4 ? `<div style="font-size:13px;color:var(--text-3);margin-top:6px;">+ ${rolled.length - 4} more</div>` : ''}
+        </div>
+      ` : ''}
+
+      <div class="bestie-bubble" style="margin-top:24px;">
+        <div class="bestie-name">The Bestie</div>
+        ${getClosingLine(done.length)}
+      </div>
+
+      <button class="btn btn-primary mt-24" onclick="renderHome()">See you tomorrow ⚡</button>
+    </div>
+  `);
+}
+
+function getClosingLine(doneCount) {
+  if (doneCount === 0) return "rest is part of the work. tomorrow's another shot.";
+  if (doneCount === 1) return "one real thing done. that's not nothing — that's everything.";
+  if (doneCount <= 3) return `${doneCount} things done. your brain did WORK today.`;
+  return `${doneCount} things DOWN. okay you were actually kind of crushing it 🔥`;
+}
+
+// ============================================================
+// SPIRAL OVERLAY
+// ============================================================
+const SPIRAL_STEPS = [
+  { num: '5', text: 'Name 5 things you can see right now.' },
+  { num: '4', text: 'Name 4 things you can physically feel.' },
+  { num: '3', text: 'Name 3 things you can hear.' },
+  { num: '60', text: 'Stand up. Walk or shake it out for 60 seconds.' },
+  { num: '1', text: "One stupidly small thing. What's the tiniest possible next move?" },
+];
+
+function openSpiral() {
+  S.showSpiral = true;
+  S.spiralStep = 0;
+  renderSpiralStep();
+}
+
+function renderSpiralStep() {
+  const step = SPIRAL_STEPS[S.spiralStep];
+  const isLast = S.spiralStep === SPIRAL_STEPS.length - 1;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'spiral-overlay';
+  overlay.id = 'spiral-overlay';
+  overlay.innerHTML = `
+    <div class="logo" style="margin-bottom:8px;">🌀 spiral break</div>
+    <div class="headline" style="font-size:22px;text-align:center;">breathe. you're okay.</div>
+    <div class="subline" style="margin-bottom:32px;">step ${S.spiralStep + 1} of ${SPIRAL_STEPS.length}</div>
+
+    <div class="grounding-step">
+      <div class="grounding-num">${step.num}</div>
+      <div class="grounding-text">${step.text}</div>
+    </div>
+
+    <div style="width:100%;max-width:360px;margin-top:8px;">
+      <button class="btn btn-primary" onclick="nextSpiralStep()">
+        ${isLast ? 'Back to it ⚡' : 'Done → next'}
+      </button>
+      <button class="btn btn-ghost mt-8" onclick="closeSpiral()">Close</button>
+    </div>
+  `;
+
+  // Remove existing overlay
+  const existing = document.getElementById('spiral-overlay');
+  if (existing) existing.remove();
+  document.body.appendChild(overlay);
+}
+
+function nextSpiralStep() {
+  S.spiralStep++;
+  if (S.spiralStep >= SPIRAL_STEPS.length) {
+    closeSpiral();
+  } else {
+    renderSpiralStep();
+  }
+}
+
+function closeSpiral() {
+  S.showSpiral = false;
+  const overlay = document.getElementById('spiral-overlay');
+  if (overlay) overlay.remove();
+}
+
+// ============================================================
+// LOADING STATE
+// ============================================================
+function setLoading(text) {
+  render(`
+    <div class="loading" style="min-height:100vh;">
+      <div class="spinner"></div>
+      <div class="loading-text">${text}</div>
+    </div>
+  `);
+}
+
+// ============================================================
+// DOCUMENT INTERACTION TRACKING (for inactivity)
+// ============================================================
+document.addEventListener('click', () => resetInactivityTimer());
+document.addEventListener('keydown', () => resetInactivityTimer());
+document.addEventListener('touchstart', () => resetInactivityTimer());
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  updateStreak();
+  renderHome();
+}
+
+init();
+</script>
+</body>
+</html>
